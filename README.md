@@ -21,7 +21,7 @@
 ## Project Structure
 
 ```
-df-multi/
+AVcorr/
 ├── configs/                    # YAML experiment configs (v5.5 stable, v6 experimental)
 ├── datasets/                   # Metadata loaders, sequence builders, annotation loader
 ├── features/                   # MFCC, GFC, ResNet CNN, fusion, caching
@@ -81,7 +81,7 @@ Sequences are sampled at **2 FPS** over **24 timesteps** (≈ 12-second clips).
 ## Installation
 
 ```powershell
-cd C:\Users\HP\df-multi
+cd AVcorr
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -97,14 +97,25 @@ Ensure `ffmpeg` is installed and available in PATH.
 
 ### Datasets
 
-| Dataset | Role in AVcorr | Labels / annotations | Manipulation types | Metadata builder | Config / evaluation |
-|---------|----------------|----------------------|--------------------|------------------|---------------------|
-| **LAV-DF** | Primary training set; temporal forgery localization and in-domain detection (official train/val/test split) | Video-level real/fake + `fake_periods` (segment-level timestamps) from `metadata.min.json` | Content-driven audio and/or visual manipulation (real, fake-audio, fake-video, both) | `datasets/prepare_metadata.py` | `configs/lavdf_avcorr_*.yaml`, `scripts/eval_localization.py`, `scripts/eval_temporal.py` |
-| **AV-Deepfake1M** | Large-scale temporal localization (training + dev split) and zero-shot localization / detection | Video-level label, `modify_type`, `fake_segments`, plus per-modality `audio_fake_segments` / `visual_fake_segments` | Visual-modified, audio-modified, both-modified | `scripts/build_avdeepfake1m_csv.py`, `scripts/build_present_indexes_df1m.py` | `configs/avdeepfake1m_avcorr_l*.yaml`, `scripts/eval_localization_df1m.py` |
-| **FakeAVCeleb** | Zero-shot cross-dataset detection (no refitting on target) | Video-level real/fake; modality flags `modify_video` / `modify_audio` inferred from folder names | RealVideo-RealAudio, FakeVideo-RealAudio, RealVideo-FakeAudio, FakeVideo-FakeAudio | `scripts/build_fakeavceleb_csv.py` | `scripts/eval_crossdataset.py`, `scripts/eval_crossdataset_x.py` |
-| **DFDC** | Zero-shot cross-dataset detection | Video-level REAL/FAKE from per-part `metadata.json`; no modality annotation | Face-swap deepfakes | `scripts/build_dfdc_csv.py` | `scripts/eval_crossdataset.py` |
-| **DeepfakeTIMIT** (+ VidTIMIT reals) | Zero-shot cross-dataset detection | Video-level real/fake; quality tag (HQ / LQ) and subject id | Face-swap (HQ 128x128, LQ 64x64) | `scripts/build_deepfaketimit_csv.py`, `scripts/fetch_vidtimit_reals.py` | `scripts/eval_crossdataset.py` |
-| **VoxCeleb** | Real-only false-positive-rate probe | None (all clips treated as real) | n/a | CSV with `video_path` | `scripts/eval_crossdataset.py --real_only` |
+| Dataset | Role in AVcorr | Labels / annotations | Manipulation types |
+|---------|----------------|----------------------|--------------------|
+| **LAV-DF** | Primary training set; temporal forgery localization and in-domain detection (official train/val/test split) | Video-level real/fake + `fake_periods` (segment timestamps) from `metadata.min.json` | Content-driven audio and/or visual manipulation (real, fake-audio, fake-video, both) |
+| **AV-Deepfake1M** | Large-scale temporal localization (train + dev split); zero-shot localization / detection | Video-level label, `modify_type`, `fake_segments`, per-modality `audio_fake_segments` / `visual_fake_segments` | Visual-modified, audio-modified, both-modified |
+| **FakeAVCeleb** | Zero-shot cross-dataset detection (no refitting on target) | Video-level real/fake; `modify_video` / `modify_audio` flags inferred from folder names | Real/Fake Video × Real/Fake Audio (4 categories) |
+| **DFDC** | Zero-shot cross-dataset detection | Video-level REAL/FAKE from per-part `metadata.json`; no modality annotation | Face-swap deepfakes |
+| **DeepfakeTIMIT** (+ VidTIMIT reals) | Zero-shot cross-dataset detection | Video-level real/fake; quality tag (HQ / LQ) and subject id | Face-swap (HQ 128x128, LQ 64x64) |
+| **VoxCeleb** | Real-only false-positive-rate probe | None (all clips treated as real) | n/a |
+
+**Metadata builders and evaluation entry points**
+
+| Dataset | Metadata builder | Config / evaluation |
+|---------|------------------|---------------------|
+| **LAV-DF** | `datasets/prepare_metadata.py` | `configs/lavdf_avcorr_*.yaml`, `scripts/eval_localization.py`, `scripts/eval_temporal.py` |
+| **AV-Deepfake1M** | `scripts/build_avdeepfake1m_csv.py`, `scripts/build_present_indexes_df1m.py` | `configs/avdeepfake1m_avcorr_l*.yaml`, `scripts/eval_localization_df1m.py` |
+| **FakeAVCeleb** | `scripts/build_fakeavceleb_csv.py` | `scripts/eval_crossdataset.py`, `scripts/eval_crossdataset_x.py` |
+| **DFDC** | `scripts/build_dfdc_csv.py` | `scripts/eval_crossdataset.py` |
+| **DeepfakeTIMIT** | `scripts/build_deepfaketimit_csv.py`, `scripts/fetch_vidtimit_reals.py` | `scripts/eval_crossdataset.py` |
+| **VoxCeleb** | CSV with a `video_path` column | `scripts/eval_crossdataset.py --real_only` |
 
 **Notes**
 
@@ -265,8 +276,3 @@ tensorboard --logdir logs
 - Feature caches versioned by directory signature (`cache_v3`, `cache_v5_gfc`)
 - Training state persisted to `logs/<experiment>/training_status.json` after every epoch
 - Best checkpoint selected by AUC on validation set
-#
-#   A V C o r r  
- #   A V C o r r  
- #   A V C o r r  
- 
