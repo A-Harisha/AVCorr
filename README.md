@@ -266,3 +266,5 @@ tensorboard --logdir logs
 - Training state persisted to `logs/<experiment>/training_status.json` after every epoch
 - Best checkpoint selected by AUC on validation set
 #
+#   A V C o r r  
+ 
